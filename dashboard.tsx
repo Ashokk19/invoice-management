@@ -30,15 +30,95 @@ import {
   ArrowUpRight,
   ArrowDownRight,
   Bell,
+  GripVertical,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd"
 
 export default function Dashboard() {
   const [expandedMenus, setExpandedMenus] = useState<string[]>(["dashboard"])
+  const [dashboardTiles, setDashboardTiles] = useState([
+    {
+      id: "stock-value",
+      title: "Total Stock Value",
+      value: "$2,847,650",
+      change: "+12.5%",
+      changeType: "positive",
+      icon: DollarSign,
+      description: "Current inventory worth",
+      size: "normal", // normal, large
+    },
+    {
+      id: "monthly-sales",
+      title: "Monthly Sales",
+      value: "$485,230",
+      change: "+8.2%",
+      changeType: "positive",
+      icon: TrendingUp,
+      description: "This month vs last month",
+      size: "normal",
+    },
+    {
+      id: "low-stock",
+      title: "Low Stock Items",
+      value: "23",
+      change: "+5",
+      changeType: "negative",
+      icon: AlertTriangle,
+      description: "Items below minimum stock",
+      size: "normal",
+    },
+    {
+      id: "active-customers",
+      title: "Active Customers",
+      value: "1,247",
+      change: "+15.3%",
+      changeType: "positive",
+      icon: Users,
+      description: "Customers with recent activity",
+      size: "large",
+    },
+    {
+      id: "pending-orders",
+      title: "Pending Orders",
+      value: "89",
+      change: "-12%",
+      changeType: "positive",
+      icon: ClipboardList,
+      description: "Orders awaiting fulfillment",
+      size: "normal",
+    },
+    {
+      id: "revenue-growth",
+      title: "Revenue Growth",
+      value: "24.8%",
+      change: "+3.2%",
+      changeType: "positive",
+      icon: BarChart3,
+      description: "Year over year growth",
+      size: "normal",
+    },
+  ])
 
   const toggleMenu = (menuId: string) => {
     setExpandedMenus((prev) => (prev.includes(menuId) ? prev.filter((id) => id !== menuId) : [...prev, menuId]))
+  }
+
+  const handleDragEnd = (result: any) => {
+    if (!result.destination) return
+
+    const items = Array.from(dashboardTiles)
+    const [reorderedItem] = items.splice(result.source.index, 1)
+    items.splice(result.destination.index, 0, reorderedItem)
+
+    setDashboardTiles(items)
+  }
+
+  const toggleTileSize = (tileId: string) => {
+    setDashboardTiles((prev) =>
+      prev.map((tile) => (tile.id === tileId ? { ...tile, size: tile.size === "normal" ? "large" : "normal" } : tile)),
+    )
   }
 
   const menuItems = [
@@ -47,17 +127,17 @@ export default function Dashboard() {
       label: "Home/Dashboard",
       icon: Home,
       active: true,
-      href: "#",
+      href: "/dashboard",
     },
     {
       id: "inventory",
       label: "Inventory",
       icon: Package,
       submenu: [
-        { label: "Item List", icon: ClipboardList, href: "#" },
-        { label: "Item Category", icon: Package2, href: "#" },
-        { label: "Proactive Expiry Tracking", icon: AlertTriangle, href: "#" },
-        { label: "Inventory Log", icon: ScrollText, href: "#" },
+        { label: "Item List", icon: ClipboardList, href: "/inventory/items" },
+        { label: "Item Category", icon: Package2, href: "/inventory/categories" },
+        { label: "Proactive Expiry Tracking", icon: AlertTriangle, href: "/inventory/expiry" },
+        { label: "Inventory Log", icon: ScrollText, href: "/inventory/log" },
       ],
     },
     {
@@ -65,14 +145,14 @@ export default function Dashboard() {
       label: "Sales",
       icon: ShoppingCart,
       submenu: [
-        { label: "Customers List", icon: Users, href: "#" },
-        { label: "Tax Invoice", icon: FileText, href: "#" },
-        { label: "Delivery Note", icon: Truck, href: "#" },
-        { label: "Invoice History", icon: History, href: "#" },
-        { label: "Sales Return", icon: RotateCcw, href: "#" },
-        { label: "Credits", icon: CreditCard, href: "#" },
-        { label: "Payment Log", icon: Receipt, href: "#" },
-        { label: "Shipments", icon: Ship, href: "#" },
+        { label: "Customers List", icon: Users, href: "/sales/customers" },
+        { label: "Tax Invoice", icon: FileText, href: "/sales/invoices" },
+        { label: "Delivery Note", icon: Truck, href: "/sales/delivery" },
+        { label: "Invoice History", icon: History, href: "/sales/history" },
+        { label: "Sales Return", icon: RotateCcw, href: "/sales/returns" },
+        { label: "Credits", icon: CreditCard, href: "/sales/credits" },
+        { label: "Payment Log", icon: Receipt, href: "/sales/payments" },
+        { label: "Shipments", icon: Ship, href: "/sales/shipments" },
       ],
     },
     {
@@ -80,64 +160,13 @@ export default function Dashboard() {
       label: "Purchase",
       icon: ShoppingBag,
       submenu: [
-        { label: "Vendors", icon: Building2, href: "#" },
-        { label: "Purchase Order", icon: ClipboardList, href: "#" },
-        { label: "Purchase Received", icon: Package, href: "#" },
-        { label: "Bills", icon: FileText, href: "#" },
-        { label: "Payments Made", icon: CreditCard, href: "#" },
-        { label: "Vendor Credits", icon: Receipt, href: "#" },
+        { label: "Vendors", icon: Building2, href: "/purchase/vendors" },
+        { label: "Purchase Order", icon: ClipboardList, href: "/purchase/orders" },
+        { label: "Purchase Received", icon: Package, href: "/purchase/received" },
+        { label: "Bills", icon: FileText, href: "/purchase/bills" },
+        { label: "Payments Made", icon: CreditCard, href: "/purchase/payments" },
+        { label: "Vendor Credits", icon: Receipt, href: "/purchase/credits" },
       ],
-    },
-  ]
-
-  const dashboardTiles = [
-    {
-      title: "Total Stock Value",
-      value: "$2,847,650",
-      change: "+12.5%",
-      changeType: "positive",
-      icon: DollarSign,
-      description: "Current inventory worth",
-    },
-    {
-      title: "Monthly Sales",
-      value: "$485,230",
-      change: "+8.2%",
-      changeType: "positive",
-      icon: TrendingUp,
-      description: "This month vs last month",
-    },
-    {
-      title: "Low Stock Items",
-      value: "23",
-      change: "+5",
-      changeType: "negative",
-      icon: AlertTriangle,
-      description: "Items below minimum stock",
-    },
-    {
-      title: "Active Customers",
-      value: "1,247",
-      change: "+15.3%",
-      changeType: "positive",
-      icon: Users,
-      description: "Customers with recent activity",
-    },
-    {
-      title: "Pending Orders",
-      value: "89",
-      change: "-12%",
-      changeType: "positive",
-      icon: ClipboardList,
-      description: "Orders awaiting fulfillment",
-    },
-    {
-      title: "Revenue Growth",
-      value: "24.8%",
-      change: "+3.2%",
-      changeType: "positive",
-      icon: BarChart3,
-      description: "Year over year growth",
     },
   ]
 
@@ -234,49 +263,87 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Dashboard Tiles */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-          {dashboardTiles.map((tile, index) => (
-            <Card
-              key={index}
-              className="bg-white/40 backdrop-blur-3xl border border-white/80 shadow-xl hover:bg-white/50 hover:shadow-2xl transition-all duration-300 ring-1 ring-white/60 relative overflow-hidden"
-            >
-              {/* Glass effect overlay */}
-              <div className="absolute inset-0 bg-gradient-to-br from-white/30 via-transparent to-white/20"></div>
+        {/* Draggable Dashboard Tiles */}
+        <DragDropContext onDragEnd={handleDragEnd}>
+          <Droppable droppableId="dashboard-tiles">
+            {(provided) => (
+              <div
+                {...provided.droppableProps}
+                ref={provided.innerRef}
+                className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8"
+              >
+                {dashboardTiles.map((tile, index) => (
+                  <Draggable key={tile.id} draggableId={tile.id} index={index}>
+                    {(provided, snapshot) => (
+                      <div
+                        ref={provided.innerRef}
+                        {...provided.draggableProps}
+                        className={`${tile.size === "large" ? "md:col-span-2" : ""} ${
+                          snapshot.isDragging ? "rotate-3 scale-105" : ""
+                        } transition-all duration-200`}
+                      >
+                        <Card className="bg-white/40 backdrop-blur-3xl border border-white/80 shadow-xl hover:bg-white/50 hover:shadow-2xl transition-all duration-300 ring-1 ring-white/60 relative overflow-hidden group">
+                          {/* Glass effect overlay */}
+                          <div className="absolute inset-0 bg-gradient-to-br from-white/30 via-transparent to-white/20"></div>
 
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 relative z-10">
-                <CardTitle className="text-sm font-semibold text-gray-700">{tile.title}</CardTitle>
-                <div
-                  className={`p-2 rounded-lg ${
-                    tile.changeType === "positive" ? "bg-violet-500/20" : "bg-orange-500/20"
-                  }`}
-                >
-                  <tile.icon
-                    className={`w-4 h-4 ${tile.changeType === "positive" ? "text-violet-600" : "text-orange-600"}`}
-                  />
-                </div>
-              </CardHeader>
-              <CardContent className="relative z-10">
-                <div className="text-2xl font-bold text-gray-900 mb-1">{tile.value}</div>
-                <div className="flex items-center space-x-2">
-                  <span
-                    className={`text-sm font-semibold flex items-center ${
-                      tile.changeType === "positive" ? "text-green-600" : "text-red-600"
-                    }`}
-                  >
-                    {tile.changeType === "positive" ? (
-                      <ArrowUpRight className="w-3 h-3 mr-1" />
-                    ) : (
-                      <ArrowDownRight className="w-3 h-3 mr-1" />
+                          {/* Drag handle */}
+                          <div
+                            {...provided.dragHandleProps}
+                            className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 cursor-grab active:cursor-grabbing z-20"
+                          >
+                            <GripVertical className="w-4 h-4 text-gray-400" />
+                          </div>
+
+                          {/* Size toggle button */}
+                          <button
+                            onClick={() => toggleTileSize(tile.id)}
+                            className="absolute top-2 right-8 opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-20 p-1 rounded bg-white/20 hover:bg-white/30"
+                          >
+                            <BarChart3 className="w-3 h-3 text-gray-600" />
+                          </button>
+
+                          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 relative z-10">
+                            <CardTitle className="text-sm font-semibold text-gray-700">{tile.title}</CardTitle>
+                            <div
+                              className={`p-2 rounded-lg ${
+                                tile.changeType === "positive" ? "bg-violet-500/20" : "bg-orange-500/20"
+                              }`}
+                            >
+                              <tile.icon
+                                className={`w-4 h-4 ${
+                                  tile.changeType === "positive" ? "text-violet-600" : "text-orange-600"
+                                }`}
+                              />
+                            </div>
+                          </CardHeader>
+                          <CardContent className="relative z-10">
+                            <div className="text-2xl font-bold text-gray-900 mb-1">{tile.value}</div>
+                            <div className="flex items-center space-x-2">
+                              <span
+                                className={`text-sm font-semibold flex items-center ${
+                                  tile.changeType === "positive" ? "text-green-600" : "text-red-600"
+                                }`}
+                              >
+                                {tile.changeType === "positive" ? (
+                                  <ArrowUpRight className="w-3 h-3 mr-1" />
+                                ) : (
+                                  <ArrowDownRight className="w-3 h-3 mr-1" />
+                                )}
+                                {tile.change}
+                              </span>
+                            </div>
+                            <p className="text-xs text-gray-600 mt-2 font-medium">{tile.description}</p>
+                          </CardContent>
+                        </Card>
+                      </div>
                     )}
-                    {tile.change}
-                  </span>
-                </div>
-                <p className="text-xs text-gray-600 mt-2 font-medium">{tile.description}</p>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+                  </Draggable>
+                ))}
+                {provided.placeholder}
+              </div>
+            )}
+          </Droppable>
+        </DragDropContext>
 
         {/* Charts Section */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
