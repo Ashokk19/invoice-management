@@ -3,116 +3,89 @@
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Eye, Download, Send, Search } from "lucide-react"
+import { Badge } from "@/components/ui/badge"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Calendar } from "@/components/ui/calendar"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { CalendarIcon, Search, FileText, Eye, Download, Send } from "lucide-react"
+import { format } from "date-fns"
+import AppSidebar from "@/components/app-sidebar"
 import { toast } from "sonner"
-import AppSidebar from "../components/app-sidebar"
 
 interface Invoice {
   id: string
   invoiceNumber: string
-  customerName: string
-  customerEmail: string
+  customer: string
   invoiceDate: string
   dueDate: string
   amount: number
-  paidAmount: number
   status: "Draft" | "Sent" | "Paid" | "Overdue" | "Cancelled"
+  paymentStatus: "Pending" | "Partial" | "Paid"
   items: number
-  paymentMethod?: string
-  notes?: string
 }
 
 export default function InvoiceHistory() {
   const [invoices, setInvoices] = useState<Invoice[]>([
     {
-      id: "1",
+      id: "INV001",
       invoiceNumber: "INV-2024-001",
-      customerName: "Rajesh Kumar",
-      customerEmail: "rajesh@example.com",
+      customer: "Rajesh Kumar",
       invoiceDate: "2024-01-15",
-      dueDate: "2024-02-14",
-      amount: 25000,
-      paidAmount: 25000,
+      dueDate: "2024-02-15",
+      amount: 125000,
       status: "Paid",
+      paymentStatus: "Paid",
       items: 3,
-      paymentMethod: "Bank Transfer",
-      notes: "Payment received on time",
     },
     {
-      id: "2",
+      id: "INV002",
       invoiceNumber: "INV-2024-002",
-      customerName: "Priya Sharma",
-      customerEmail: "priya@example.com",
+      customer: "Priya Sharma",
       invoiceDate: "2024-01-20",
-      dueDate: "2024-02-19",
-      amount: 18500,
-      paidAmount: 0,
+      dueDate: "2024-02-20",
+      amount: 45000,
       status: "Sent",
+      paymentStatus: "Pending",
       items: 2,
     },
     {
-      id: "3",
+      id: "INV003",
       invoiceNumber: "INV-2024-003",
-      customerName: "Amit Patel",
-      customerEmail: "amit@example.com",
+      customer: "Amit Patel",
       invoiceDate: "2024-01-10",
       dueDate: "2024-01-25",
-      amount: 32000,
-      paidAmount: 0,
+      amount: 75000,
       status: "Overdue",
-      items: 5,
-    },
-    {
-      id: "4",
-      invoiceNumber: "INV-2024-004",
-      customerName: "Sneha Reddy",
-      customerEmail: "sneha@example.com",
-      invoiceDate: "2024-01-25",
-      dueDate: "2024-02-24",
-      amount: 15000,
-      paidAmount: 0,
-      status: "Draft",
-      items: 1,
+      paymentStatus: "Pending",
+      items: 4,
     },
   ])
 
   const [searchTerm, setSearchTerm] = useState("")
-  const [statusFilter, setStatusFilter] = useState<string>("all")
-  const [dateFilter, setDateFilter] = useState<string>("all")
+  const [statusFilter, setStatusFilter] = useState("all")
+  const [dateRange, setDateRange] = useState<{ from?: Date; to?: Date }>({})
 
   const filteredInvoices = invoices.filter((invoice) => {
     const matchesSearch =
       invoice.invoiceNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      invoice.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      invoice.customerEmail.toLowerCase().includes(searchTerm.toLowerCase())
+      invoice.customer.toLowerCase().includes(searchTerm.toLowerCase())
 
-    const matchesStatus = statusFilter === "all" || invoice.status.toLowerCase() === statusFilter.toLowerCase()
+    const matchesStatus = statusFilter === "all" || invoice.status.toLowerCase() === statusFilter
 
-    let matchesDate = true
-    if (dateFilter !== "all") {
-      const invoiceDate = new Date(invoice.invoiceDate)
-      const now = new Date()
-      const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
-      const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
-
-      switch (dateFilter) {
-        case "today":
-          matchesDate = invoiceDate.toDateString() === now.toDateString()
-          break
-        case "week":
-          matchesDate = invoiceDate >= sevenDaysAgo
-          break
-        case "month":
-          matchesDate = invoiceDate >= thirtyDaysAgo
-          break
-      }
-    }
-
-    return matchesSearch && matchesStatus && matchesDate
+    return matchesSearch && matchesStatus
   })
+
+  const totalAmount = filteredInvoices.reduce((sum, invoice) => sum + invoice.amount, 0)
+  const paidAmount = filteredInvoices
+    .filter((invoice) => invoice.paymentStatus === "Paid")
+    .reduce((sum, invoice) => sum + invoice.amount, 0)
+  const pendingAmount = totalAmount - paidAmount
+
+  const handleSendReminder = (invoiceId: string) => {
+    toast.success("Payment reminder sent!")
+  }
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -120,46 +93,20 @@ export default function InvoiceHistory() {
         return "bg-green-100 text-green-800"
       case "Sent":
         return "bg-blue-100 text-blue-800"
-      case "Overdue":
-        return "bg-red-100 text-red-800"
       case "Draft":
         return "bg-gray-100 text-gray-800"
+      case "Overdue":
+        return "bg-red-100 text-red-800"
       case "Cancelled":
-        return "bg-orange-100 text-orange-800"
+        return "bg-red-100 text-red-800"
       default:
         return "bg-gray-100 text-gray-800"
     }
   }
 
-  const calculateTotals = () => {
-    const totalAmount = filteredInvoices.reduce((sum, invoice) => sum + invoice.amount, 0)
-    const totalPaid = filteredInvoices.reduce((sum, invoice) => sum + invoice.paidAmount, 0)
-    const totalOutstanding = totalAmount - totalPaid
-    const paidCount = filteredInvoices.filter((inv) => inv.status === "Paid").length
-    const overdueCount = filteredInvoices.filter((inv) => inv.status === "Overdue").length
-
-    return { totalAmount, totalPaid, totalOutstanding, paidCount, overdueCount }
-  }
-
-  const { totalAmount, totalPaid, totalOutstanding, paidCount, overdueCount } = calculateTotals()
-
-  const handleViewInvoice = (invoiceId: string) => {
-    toast.success("Opening invoice details...")
-  }
-
-  const handleDownloadInvoice = (invoiceId: string) => {
-    toast.success("Invoice PDF downloaded successfully!")
-  }
-
-  const handleSendInvoice = (invoice: Invoice) => {
-    const message = `Hi ${invoice.customerName}, your invoice ${invoice.invoiceNumber} for ₹${invoice.amount.toFixed(2)} is ready. Please find the details attached.`
-    toast.success("Invoice sent successfully!")
-  }
-
   return (
-    <div className="flex min-h-screen bg-gradient-to-br from-violet-50 via-white to-purple-50">
+    <div className="flex min-h-screen bg-gradient-to-br from-violet-50 via-purple-50 to-indigo-100">
       <AppSidebar currentPath="/sales/history" />
-
       <div className="flex-1 p-6 space-y-6">
         {/* Header */}
         <div className="flex justify-between items-center">
@@ -167,50 +114,59 @@ export default function InvoiceHistory() {
             <h1 className="text-3xl font-bold bg-gradient-to-r from-violet-600 to-purple-700 bg-clip-text text-transparent">
               Invoice History
             </h1>
-            <p className="text-gray-600 mt-1">View and manage all your invoices</p>
+            <p className="text-gray-600 mt-1">Track and manage all your invoices</p>
           </div>
-          <Button className="bg-gradient-to-r from-violet-500 to-purple-600">Create New Invoice</Button>
         </div>
 
         {/* Summary Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           <Card className="bg-white/40 backdrop-blur-3xl border-white/20 shadow-xl">
-            <CardContent className="p-4">
-              <div className="text-center">
-                <p className="text-2xl font-bold text-violet-700">₹{totalAmount.toLocaleString()}</p>
-                <p className="text-sm text-gray-600">Total Amount</p>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600">Total Invoices</p>
+                  <p className="text-2xl font-bold text-gray-900">{filteredInvoices.length}</p>
+                </div>
+                <FileText className="w-8 h-8 text-violet-600" />
               </div>
             </CardContent>
           </Card>
           <Card className="bg-white/40 backdrop-blur-3xl border-white/20 shadow-xl">
-            <CardContent className="p-4">
-              <div className="text-center">
-                <p className="text-2xl font-bold text-green-700">₹{totalPaid.toLocaleString()}</p>
-                <p className="text-sm text-gray-600">Total Paid</p>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600">Total Amount</p>
+                  <p className="text-2xl font-bold text-gray-900">₹{totalAmount.toLocaleString()}</p>
+                </div>
+                <div className="w-8 h-8 bg-violet-100 rounded-full flex items-center justify-center">
+                  <span className="text-violet-600 font-bold">₹</span>
+                </div>
               </div>
             </CardContent>
           </Card>
           <Card className="bg-white/40 backdrop-blur-3xl border-white/20 shadow-xl">
-            <CardContent className="p-4">
-              <div className="text-center">
-                <p className="text-2xl font-bold text-red-700">₹{totalOutstanding.toLocaleString()}</p>
-                <p className="text-sm text-gray-600">Outstanding</p>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600">Paid Amount</p>
+                  <p className="text-2xl font-bold text-green-600">₹{paidAmount.toLocaleString()}</p>
+                </div>
+                <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                  <span className="text-green-600 font-bold">✓</span>
+                </div>
               </div>
             </CardContent>
           </Card>
           <Card className="bg-white/40 backdrop-blur-3xl border-white/20 shadow-xl">
-            <CardContent className="p-4">
-              <div className="text-center">
-                <p className="text-2xl font-bold text-blue-700">{paidCount}</p>
-                <p className="text-sm text-gray-600">Paid Invoices</p>
-              </div>
-            </CardContent>
-          </Card>
-          <Card className="bg-white/40 backdrop-blur-3xl border-white/20 shadow-xl">
-            <CardContent className="p-4">
-              <div className="text-center">
-                <p className="text-2xl font-bold text-orange-700">{overdueCount}</p>
-                <p className="text-sm text-gray-600">Overdue</p>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600">Pending Amount</p>
+                  <p className="text-2xl font-bold text-orange-600">₹{pendingAmount.toLocaleString()}</p>
+                </div>
+                <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center">
+                  <span className="text-orange-600 font-bold">⏳</span>
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -218,8 +174,8 @@ export default function InvoiceHistory() {
 
         {/* Filters */}
         <Card className="bg-white/40 backdrop-blur-3xl border-white/20 shadow-xl">
-          <CardContent className="p-4">
-            <div className="flex flex-wrap gap-4 items-center">
+          <CardContent className="p-6">
+            <div className="flex flex-wrap gap-4">
               <div className="flex-1 min-w-64">
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
@@ -232,8 +188,8 @@ export default function InvoiceHistory() {
                 </div>
               </div>
               <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-40 bg-white/50 border-white/20">
-                  <SelectValue placeholder="Status" />
+                <SelectTrigger className="w-48 bg-white/50 border-white/20">
+                  <SelectValue placeholder="Filter by status" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Status</SelectItem>
@@ -241,95 +197,83 @@ export default function InvoiceHistory() {
                   <SelectItem value="sent">Sent</SelectItem>
                   <SelectItem value="paid">Paid</SelectItem>
                   <SelectItem value="overdue">Overdue</SelectItem>
-                  <SelectItem value="cancelled">Cancelled</SelectItem>
                 </SelectContent>
               </Select>
-              <Select value={dateFilter} onValueChange={setDateFilter}>
-                <SelectTrigger className="w-40 bg-white/50 border-white/20">
-                  <SelectValue placeholder="Date" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Time</SelectItem>
-                  <SelectItem value="today">Today</SelectItem>
-                  <SelectItem value="week">This Week</SelectItem>
-                  <SelectItem value="month">This Month</SelectItem>
-                </SelectContent>
-              </Select>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" className="bg-white/50 border-white/20">
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    Date Range
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0">
+                  <Calendar mode="range" numberOfMonths={2} />
+                </PopoverContent>
+              </Popover>
             </div>
           </CardContent>
         </Card>
 
-        {/* Invoice List */}
+        {/* Invoice Table */}
         <Card className="bg-white/40 backdrop-blur-3xl border-white/20 shadow-xl">
           <CardHeader>
-            <CardTitle className="text-violet-700">Invoices ({filteredInvoices.length})</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              <FileText className="w-5 h-5" />
+              Invoices ({filteredInvoices.length})
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              {filteredInvoices.map((invoice) => (
-                <div key={invoice.id} className="p-4 bg-white/30 rounded-lg border border-white/20">
-                  <div className="flex items-center justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-2">
-                        <h3 className="font-semibold text-lg">{invoice.invoiceNumber}</h3>
-                        <Badge className={getStatusColor(invoice.status)}>{invoice.status}</Badge>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Invoice Number</TableHead>
+                  <TableHead>Customer</TableHead>
+                  <TableHead>Invoice Date</TableHead>
+                  <TableHead>Due Date</TableHead>
+                  <TableHead>Amount</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Payment</TableHead>
+                  <TableHead>Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredInvoices.map((invoice) => (
+                  <TableRow key={invoice.id}>
+                    <TableCell>
+                      <div className="font-medium">{invoice.invoiceNumber}</div>
+                      <div className="text-sm text-gray-500">{invoice.items} items</div>
+                    </TableCell>
+                    <TableCell>{invoice.customer}</TableCell>
+                    <TableCell>{format(new Date(invoice.invoiceDate), "MMM dd, yyyy")}</TableCell>
+                    <TableCell>{format(new Date(invoice.dueDate), "MMM dd, yyyy")}</TableCell>
+                    <TableCell>₹{invoice.amount.toLocaleString()}</TableCell>
+                    <TableCell>
+                      <Badge className={getStatusColor(invoice.status)}>{invoice.status}</Badge>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant={invoice.paymentStatus === "Paid" ? "default" : "secondary"}>
+                        {invoice.paymentStatus}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex gap-2">
+                        <Button size="sm" variant="outline">
+                          <Eye className="w-3 h-3" />
+                        </Button>
+                        <Button size="sm" variant="outline">
+                          <Download className="w-3 h-3" />
+                        </Button>
+                        {invoice.paymentStatus === "Pending" && (
+                          <Button size="sm" variant="outline" onClick={() => handleSendReminder(invoice.id)}>
+                            <Send className="w-3 h-3" />
+                          </Button>
+                        )}
                       </div>
-                      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm">
-                        <div>
-                          <p className="text-gray-600">Customer</p>
-                          <p className="font-medium">{invoice.customerName}</p>
-                          <p className="text-gray-500">{invoice.customerEmail}</p>
-                        </div>
-                        <div>
-                          <p className="text-gray-600">Amount</p>
-                          <p className="font-bold text-lg text-violet-700">₹{invoice.amount.toLocaleString()}</p>
-                          {invoice.paidAmount > 0 && (
-                            <p className="text-green-600 text-sm">Paid: ₹{invoice.paidAmount.toLocaleString()}</p>
-                          )}
-                        </div>
-                        <div>
-                          <p className="text-gray-600">Dates</p>
-                          <p>Invoice: {invoice.invoiceDate}</p>
-                          <p>Due: {invoice.dueDate}</p>
-                        </div>
-                        <div>
-                          <p className="text-gray-600">Details</p>
-                          <p>{invoice.items} items</p>
-                          {invoice.paymentMethod && <p className="text-green-600">{invoice.paymentMethod}</p>}
-                        </div>
-                      </div>
-                      {invoice.notes && <p className="text-sm text-gray-600 mt-2 italic">{invoice.notes}</p>}
-                    </div>
-                    <div className="flex gap-2 ml-4">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleViewInvoice(invoice.id)}
-                        className="bg-white/50 border-white/20"
-                      >
-                        <Eye className="w-4 h-4" />
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleDownloadInvoice(invoice.id)}
-                        className="bg-white/50 border-white/20"
-                      >
-                        <Download className="w-4 h-4" />
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleSendInvoice(invoice)}
-                        className="bg-white/50 border-white/20"
-                      >
-                        <Send className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
           </CardContent>
         </Card>
       </div>

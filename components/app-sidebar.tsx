@@ -38,7 +38,9 @@ export default function AppSidebar({ currentPath = "/" }: AppSidebarProps) {
   }
 
   const navigateTo = (href: string) => {
-    router.push(href)
+    if (href) {
+      router.push(href)
+    }
   }
 
   const menuItems = [

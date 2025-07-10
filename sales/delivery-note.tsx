@@ -3,373 +3,274 @@
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Plus, Minus, Download, Save, Truck } from "lucide-react"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { Calendar } from "@/components/ui/calendar"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { CalendarIcon, Plus, Search, Truck, Package, Eye, Download } from "lucide-react"
+import { format } from "date-fns"
+import AppSidebar from "@/components/app-sidebar"
 import { toast } from "sonner"
-import AppSidebar from "../components/app-sidebar"
 
-interface DeliveryItem {
+interface DeliveryNote {
   id: string
-  itemName: string
-  description: string
-  quantity: number
-  unit: string
-}
-
-interface Customer {
-  id: string
-  name: string
-  email: string
-  phone: string
-  address: string
+  deliveryNoteNumber: string
+  customer: string
+  invoiceNumber: string
+  deliveryDate: string
+  status: "Pending" | "In Transit" | "Delivered"
+  items: Array<{
+    itemName: string
+    quantity: number
+    delivered: number
+  }>
+  deliveryAddress: string
+  trackingNumber?: string
 }
 
 export default function DeliveryNote() {
-  const [customer, setCustomer] = useState<Customer | null>(null)
-  const [deliveryNoteNumber, setDeliveryNoteNumber] = useState("DN-2024-" + String(Date.now()).slice(-4))
-  const [deliveryDate, setDeliveryDate] = useState(new Date().toISOString().split("T")[0])
-  const [referenceNumber, setReferenceNumber] = useState("")
-  const [items, setItems] = useState<DeliveryItem[]>([
+  const [deliveryNotes, setDeliveryNotes] = useState<DeliveryNote[]>([
     {
-      id: "1",
-      itemName: "",
-      description: "",
-      quantity: 1,
-      unit: "Pcs",
+      id: "DN001",
+      deliveryNoteNumber: "DN-2024-001",
+      customer: "Rajesh Kumar",
+      invoiceNumber: "INV-2024-001",
+      deliveryDate: "2024-01-20",
+      status: "Delivered",
+      items: [
+        { itemName: "Product A", quantity: 10, delivered: 10 },
+        { itemName: "Product B", quantity: 5, delivered: 5 },
+      ],
+      deliveryAddress: "123 MG Road, Mumbai, Maharashtra 400001",
+      trackingNumber: "TRK123456789",
+    },
+    {
+      id: "DN002",
+      deliveryNoteNumber: "DN-2024-002",
+      customer: "Priya Sharma",
+      invoiceNumber: "INV-2024-002",
+      deliveryDate: "2024-01-22",
+      status: "In Transit",
+      items: [{ itemName: "Product C", quantity: 8, delivered: 0 }],
+      deliveryAddress: "456 Park Street, Delhi, Delhi 110001",
+      trackingNumber: "TRK123456790",
     },
   ])
-  const [deliveryAddress, setDeliveryAddress] = useState("")
-  const [specialInstructions, setSpecialInstructions] = useState("")
-  const [receiverName, setReceiverName] = useState("")
-  const [receiverSignature, setReceiverSignature] = useState("")
 
-  const customers: Customer[] = [
-    {
-      id: "1",
-      name: "Rajesh Kumar",
-      email: "rajesh@example.com",
-      phone: "+91 9876543210",
-      address: "123 MG Road, Mumbai, Maharashtra - 400001",
-    },
-    {
-      id: "2",
-      name: "Priya Sharma",
-      email: "priya@example.com",
-      phone: "+91 9876543211",
-      address: "456 Park Street, Delhi - 110001",
-    },
-  ]
+  const [searchTerm, setSearchTerm] = useState("")
+  const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const [selectedDate, setSelectedDate] = useState<Date>()
+  const [formData, setFormData] = useState({
+    customer: "",
+    invoiceNumber: "",
+    deliveryAddress: "",
+    items: [{ itemName: "", quantity: 0 }],
+  })
 
-  const addItem = () => {
-    const newItem: DeliveryItem = {
-      id: String(Date.now()),
-      itemName: "",
-      description: "",
-      quantity: 1,
-      unit: "Pcs",
+  const filteredNotes = deliveryNotes.filter(
+    (note) =>
+      note.deliveryNoteNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      note.customer.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      note.invoiceNumber.toLowerCase().includes(searchTerm.toLowerCase()),
+  )
+
+  const handleCreateDeliveryNote = () => {
+    const newNote: DeliveryNote = {
+      id: `DN${String(deliveryNotes.length + 1).padStart(3, "0")}`,
+      deliveryNoteNumber: `DN-2024-${String(deliveryNotes.length + 1).padStart(3, "0")}`,
+      customer: formData.customer,
+      invoiceNumber: formData.invoiceNumber,
+      deliveryDate: selectedDate ? format(selectedDate, "yyyy-MM-dd") : new Date().toISOString().split("T")[0],
+      status: "Pending",
+      items: formData.items.map((item) => ({ ...item, delivered: 0 })),
+      deliveryAddress: formData.deliveryAddress,
+      trackingNumber: `TRK${Date.now()}`,
     }
-    setItems([...items, newItem])
+    setDeliveryNotes([...deliveryNotes, newNote])
+    setIsDialogOpen(false)
+    toast.success("Delivery note created successfully!")
   }
 
-  const removeItem = (id: string) => {
-    if (items.length > 1) {
-      setItems(items.filter((item) => item.id !== id))
-    }
-  }
-
-  const updateItem = (id: string, field: keyof DeliveryItem, value: any) => {
-    setItems(items.map((item) => (item.id === id ? { ...item, [field]: value } : item)))
-  }
-
-  const handleSave = () => {
-    if (!customer) {
-      toast.error("Please select a customer")
-      return
-    }
-    if (items.some((item) => !item.itemName || item.quantity <= 0)) {
-      toast.error("Please fill all item details")
-      return
-    }
-    toast.success("Delivery note saved successfully!")
-  }
-
-  const handleDownloadPDF = () => {
-    toast.success("Delivery note PDF downloaded successfully!")
+  const updateStatus = (id: string, status: "Pending" | "In Transit" | "Delivered") => {
+    setDeliveryNotes(deliveryNotes.map((note) => (note.id === id ? { ...note, status } : note)))
+    toast.success(`Status updated to ${status}`)
   }
 
   return (
-    <div className="flex min-h-screen bg-gradient-to-br from-violet-50 via-white to-purple-50">
+    <div className="flex min-h-screen bg-gradient-to-br from-violet-50 via-purple-50 to-indigo-100">
       <AppSidebar currentPath="/sales/delivery" />
-
       <div className="flex-1 p-6 space-y-6">
         {/* Header */}
         <div className="flex justify-between items-center">
           <div>
             <h1 className="text-3xl font-bold bg-gradient-to-r from-violet-600 to-purple-700 bg-clip-text text-transparent">
-              Create Delivery Note
+              Delivery Notes
             </h1>
-            <p className="text-gray-600 mt-1">Generate delivery notes without pricing information</p>
+            <p className="text-gray-600 mt-1">Manage delivery notes and track shipments</p>
           </div>
-          <div className="flex gap-3">
-            <Button variant="outline" onClick={handleSave} className="bg-white/50 backdrop-blur-sm border-white/20">
-              <Save className="w-4 h-4 mr-2" />
-              Save Draft
-            </Button>
-            <Button onClick={handleDownloadPDF} className="bg-gradient-to-r from-violet-500 to-purple-600">
-              <Download className="w-4 h-4 mr-2" />
-              Download PDF
-            </Button>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Delivery Note Form */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* Customer & Delivery Details */}
-            <Card className="bg-white/40 backdrop-blur-3xl border-white/20 shadow-xl">
-              <CardHeader>
-                <CardTitle className="text-violet-700">Delivery Details</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
+          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <DialogTrigger asChild>
+              <Button className="bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700">
+                <Plus className="w-4 h-4 mr-2" />
+                Create Delivery Note
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-2xl bg-white/95 backdrop-blur-xl border-white/20">
+              <DialogHeader>
+                <DialogTitle>Create New Delivery Note</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label>Customer *</Label>
+                    <Label htmlFor="customer">Customer</Label>
                     <Select
-                      onValueChange={(value) => {
-                        const selectedCustomer = customers.find((c) => c.id === value) || null
-                        setCustomer(selectedCustomer)
-                        if (selectedCustomer) {
-                          setDeliveryAddress(selectedCustomer.address)
-                        }
-                      }}
+                      value={formData.customer}
+                      onValueChange={(value) => setFormData({ ...formData, customer: value })}
                     >
                       <SelectTrigger className="bg-white/50 border-white/20">
                         <SelectValue placeholder="Select customer" />
                       </SelectTrigger>
                       <SelectContent>
-                        {customers.map((customer) => (
-                          <SelectItem key={customer.id} value={customer.id}>
-                            {customer.name}
-                          </SelectItem>
-                        ))}
+                        <SelectItem value="Rajesh Kumar">Rajesh Kumar</SelectItem>
+                        <SelectItem value="Priya Sharma">Priya Sharma</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
                   <div>
-                    <Label>Delivery Note Number</Label>
+                    <Label htmlFor="invoice">Invoice Number</Label>
                     <Input
-                      value={deliveryNoteNumber}
-                      onChange={(e) => setDeliveryNoteNumber(e.target.value)}
+                      id="invoice"
+                      value={formData.invoiceNumber}
+                      onChange={(e) => setFormData({ ...formData, invoiceNumber: e.target.value })}
+                      placeholder="INV-2024-001"
                       className="bg-white/50 border-white/20"
-                    />
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label>Delivery Date *</Label>
-                    <Input
-                      type="date"
-                      value={deliveryDate}
-                      onChange={(e) => setDeliveryDate(e.target.value)}
-                      className="bg-white/50 border-white/20"
-                    />
-                  </div>
-                  <div>
-                    <Label>Reference Number</Label>
-                    <Input
-                      value={referenceNumber}
-                      onChange={(e) => setReferenceNumber(e.target.value)}
-                      className="bg-white/50 border-white/20"
-                      placeholder="Invoice/Order reference"
                     />
                   </div>
                 </div>
                 <div>
-                  <Label>Delivery Address *</Label>
+                  <Label>Delivery Date</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" className="w-full justify-start bg-white/50 border-white/20">
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {selectedDate ? format(selectedDate, "PPP") : "Pick a date"}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0">
+                      <Calendar mode="single" selected={selectedDate} onSelect={setSelectedDate} initialFocus />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+                <div>
+                  <Label htmlFor="address">Delivery Address</Label>
                   <Textarea
-                    value={deliveryAddress}
-                    onChange={(e) => setDeliveryAddress(e.target.value)}
+                    id="address"
+                    value={formData.deliveryAddress}
+                    onChange={(e) => setFormData({ ...formData, deliveryAddress: e.target.value })}
+                    placeholder="Enter complete delivery address"
                     className="bg-white/50 border-white/20"
-                    rows={3}
-                    placeholder="Complete delivery address"
                   />
                 </div>
-              </CardContent>
-            </Card>
+                <div className="flex justify-end gap-3">
+                  <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
+                    Cancel
+                  </Button>
+                  <Button onClick={handleCreateDeliveryNote} className="bg-gradient-to-r from-violet-500 to-purple-600">
+                    Create Delivery Note
+                  </Button>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
+        </div>
 
-            {/* Items */}
-            <Card className="bg-white/40 backdrop-blur-3xl border-white/20 shadow-xl">
-              <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle className="text-violet-700">Items to Deliver</CardTitle>
-                <Button onClick={addItem} size="sm" className="bg-violet-500">
-                  <Plus className="w-4 h-4 mr-1" />
-                  Add Item
-                </Button>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {items.map((item, index) => (
-                    <div key={item.id} className="grid grid-cols-12 gap-2 items-end p-4 bg-white/30 rounded-lg">
-                      <div className="col-span-4">
-                        <Label className="text-xs">Item Name *</Label>
-                        <Input
-                          value={item.itemName}
-                          onChange={(e) => updateItem(item.id, "itemName", e.target.value)}
-                          className="bg-white/50 border-white/20 text-sm"
-                          placeholder="Enter item name"
-                        />
+        {/* Search */}
+        <Card className="bg-white/40 backdrop-blur-3xl border-white/20 shadow-xl">
+          <CardContent className="p-6">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+              <Input
+                placeholder="Search delivery notes..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10 bg-white/50 border-white/20"
+              />
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Delivery Notes Table */}
+        <Card className="bg-white/40 backdrop-blur-3xl border-white/20 shadow-xl">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Truck className="w-5 h-5" />
+              Delivery Notes ({filteredNotes.length})
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Delivery Note</TableHead>
+                  <TableHead>Customer</TableHead>
+                  <TableHead>Invoice</TableHead>
+                  <TableHead>Delivery Date</TableHead>
+                  <TableHead>Items</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Tracking</TableHead>
+                  <TableHead>Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredNotes.map((note) => (
+                  <TableRow key={note.id}>
+                    <TableCell>
+                      <div className="font-medium">{note.deliveryNoteNumber}</div>
+                    </TableCell>
+                    <TableCell>{note.customer}</TableCell>
+                    <TableCell>{note.invoiceNumber}</TableCell>
+                    <TableCell>{format(new Date(note.deliveryDate), "MMM dd, yyyy")}</TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-1">
+                        <Package className="w-4 h-4" />
+                        {note.items.length} items
                       </div>
-                      <div className="col-span-4">
-                        <Label className="text-xs">Description</Label>
-                        <Input
-                          value={item.description}
-                          onChange={(e) => updateItem(item.id, "description", e.target.value)}
-                          className="bg-white/50 border-white/20 text-sm"
-                          placeholder="Item description"
-                        />
-                      </div>
-                      <div className="col-span-2">
-                        <Label className="text-xs">Quantity *</Label>
-                        <Input
-                          type="number"
-                          value={item.quantity}
-                          onChange={(e) => updateItem(item.id, "quantity", Number.parseInt(e.target.value) || 0)}
-                          className="bg-white/50 border-white/20 text-sm"
-                          min="1"
-                        />
-                      </div>
-                      <div className="col-span-1">
-                        <Label className="text-xs">Unit</Label>
-                        <Select value={item.unit} onValueChange={(value) => updateItem(item.id, "unit", value)}>
-                          <SelectTrigger className="bg-white/50 border-white/20 text-sm">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="Pcs">Pcs</SelectItem>
-                            <SelectItem value="Kg">Kg</SelectItem>
-                            <SelectItem value="Ltr">Ltr</SelectItem>
-                            <SelectItem value="Box">Box</SelectItem>
-                            <SelectItem value="Set">Set</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div className="col-span-1">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => removeItem(item.id)}
-                          disabled={items.length === 1}
-                          className="bg-red-50 border-red-200 text-red-600 hover:bg-red-100"
-                        >
-                          <Minus className="w-4 h-4" />
+                    </TableCell>
+                    <TableCell>
+                      <Select value={note.status} onValueChange={(value: any) => updateStatus(note.id, value)}>
+                        <SelectTrigger className="w-32">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Pending">Pending</SelectItem>
+                          <SelectItem value="In Transit">In Transit</SelectItem>
+                          <SelectItem value="Delivered">Delivered</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </TableCell>
+                    <TableCell>
+                      <code className="text-xs bg-gray-100 px-2 py-1 rounded">{note.trackingNumber}</code>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex gap-2">
+                        <Button size="sm" variant="outline">
+                          <Eye className="w-3 h-3" />
+                        </Button>
+                        <Button size="sm" variant="outline">
+                          <Download className="w-3 h-3" />
                         </Button>
                       </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Delivery Instructions & Signature */}
-            <Card className="bg-white/40 backdrop-blur-3xl border-white/20 shadow-xl">
-              <CardHeader>
-                <CardTitle className="text-violet-700">Delivery Instructions & Signature</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <Label>Special Instructions</Label>
-                  <Textarea
-                    value={specialInstructions}
-                    onChange={(e) => setSpecialInstructions(e.target.value)}
-                    className="bg-white/50 border-white/20"
-                    placeholder="Any special delivery instructions..."
-                    rows={3}
-                  />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label>Receiver Name</Label>
-                    <Input
-                      value={receiverName}
-                      onChange={(e) => setReceiverName(e.target.value)}
-                      className="bg-white/50 border-white/20"
-                      placeholder="Name of person receiving"
-                    />
-                  </div>
-                  <div>
-                    <Label>Receiver Signature</Label>
-                    <div className="h-20 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center bg-white/30">
-                      <span className="text-gray-500 text-sm">Signature area</span>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Delivery Summary */}
-          <div className="space-y-6">
-            {/* Customer Info */}
-            {customer && (
-              <Card className="bg-white/40 backdrop-blur-3xl border-white/20 shadow-xl">
-                <CardHeader>
-                  <CardTitle className="text-violet-700">Customer Details</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-2">
-                  <div>
-                    <p className="font-semibold">{customer.name}</p>
-                    <p className="text-sm text-gray-600">{customer.email}</p>
-                    <p className="text-sm text-gray-600">{customer.phone}</p>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-
-            {/* Delivery Summary */}
-            <Card className="bg-white/40 backdrop-blur-3xl border-white/20 shadow-xl">
-              <CardHeader>
-                <CardTitle className="text-violet-700">Delivery Summary</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="flex justify-between">
-                  <span>Total Items:</span>
-                  <span className="font-semibold">{items.length}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Total Quantity:</span>
-                  <span className="font-semibold">{items.reduce((sum, item) => sum + item.quantity, 0)}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Delivery Date:</span>
-                  <span className="font-semibold">{deliveryDate}</span>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Quick Actions */}
-            <Card className="bg-gradient-to-r from-violet-500/10 to-purple-500/10 backdrop-blur-3xl border-white/20 shadow-xl">
-              <CardContent className="pt-6">
-                <div className="space-y-3">
-                  <Button onClick={handleSave} className="w-full bg-violet-500 hover:bg-violet-600">
-                    <Save className="w-4 h-4 mr-2" />
-                    Save Delivery Note
-                  </Button>
-                  <Button onClick={handleDownloadPDF} variant="outline" className="w-full bg-white/50 border-white/20">
-                    <Download className="w-4 h-4 mr-2" />
-                    Download PDF
-                  </Button>
-                  <Button variant="outline" className="w-full bg-white/50 border-white/20">
-                    <Truck className="w-4 h-4 mr-2" />
-                    Track Delivery
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
       </div>
     </div>
   )
