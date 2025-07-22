@@ -31,7 +31,7 @@ interface AppSidebarProps {
 
 export default function AppSidebar({ currentPath = "/" }: AppSidebarProps) {
   const router = useRouter()
-  const [expandedMenus, setExpandedMenus] = useState<string[]>(["dashboard", "inventory", "sales" , "purchase"])
+  const [expandedMenus, setExpandedMenus] = useState<string[]>(["dashboard", "inventory", "sales", "purchase"])
 
   const toggleMenu = (menuId: string) => {
     setExpandedMenus((prev) => (prev.includes(menuId) ? prev.filter((id) => id !== menuId) : [...prev, menuId]))
@@ -74,7 +74,12 @@ export default function AppSidebar({ currentPath = "/" }: AppSidebarProps) {
           href: "/inventory/expiry",
           active: currentPath === "/inventory/expiry",
         },
-        { label: "Inventory Log", icon: ScrollText, href: "/inventory/log", active: currentPath === "/inventory/log" },
+        {
+          label: "Inventory Log",
+          icon: ScrollText,
+          href: "/inventory/log",
+          active: currentPath === "/inventory/log"
+        },
       ],
     },
     {
@@ -97,82 +102,91 @@ export default function AppSidebar({ currentPath = "/" }: AppSidebarProps) {
       label: "Purchase",
       icon: ShoppingBag,
       submenu: [
-        { label: "Vendors", icon: Building2, href: "/purchase/vendors" , active: currentPath === "/purchase/vendors" },
-        { label: "Purchase Order", icon: ClipboardList, href: "/purchase/orders" , active: currentPath === "/purchase/orders" },
-        { label: "Purchase Received", icon: Package, href: "/purchase/received" , active: currentPath === "/purchase/received" },
-        { label: "Bills", icon: FileText, href: "/purchase/bills" ,active: currentPath === "/purchase/bills" },
-        { label: "Payments Made", icon: CreditCard, href: "/purchase/payments" , active: currentPath === "/purchase/payments" },
-        { label: "Vendor Credits", icon: Receipt, href: "/purchase/credits" , active: currentPath === "/purchase/credits" },
+        { label: "Vendors", icon: Building2, href: "/purchase/vendors", active: currentPath === "/purchase/vendors" },
+        { label: "Purchase Order", icon: ClipboardList, href: "/purchase/orders", active: currentPath === "/purchase/orders" },
+        { label: "Purchase Received", icon: Package, href: "/purchase/received", active: currentPath === "/purchase/received" },
+        { label: "Bills", icon: FileText, href: "/purchase/bills", active: currentPath === "/purchase/bills" },
+        { label: "Payments Made", icon: CreditCard, href: "/purchase/payments", active: currentPath === "/purchase/payments" },
+        { label: "Vendor Credits", icon: Receipt, href: "/purchase/credits", active: currentPath === "/purchase/credits" },
       ],
     },
   ]
 
   return (
-      <div className="w-64 bg-white/40 backdrop-blur-3xl border-r border-white/80 shadow-2xl relative z-10">
+      <div className="h-full flex flex-col">
         <div className="p-6 border-b border-white/20">
           <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-gradient-to-r from-violet-500 to-purple-600 rounded-lg flex items-center justify-center shadow-lg">
-              <Package className="w-5 h-5 text-white" />
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center">
+              <Package className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h1 className="text-xl font-bold bg-gradient-to-r from-violet-600 to-purple-700 bg-clip-text text-transparent">
-                FinanceFlow
-              </h1>
-              <p className="text-gray-600 text-xs font-medium">Inventory Management</p>
+              <h1 className="text-xl font-bold text-gray-900">FinanceFlow</h1>
+              <p className="text-sm text-gray-600 font-medium">Inventory Management</p>
             </div>
           </div>
         </div>
 
-        <nav className="p-4 space-y-2">
+        <div className="flex-1 overflow-y-auto p-4 space-y-2">
           {menuItems.map((item) => (
               <div key={item.id}>
-                <Button
-                    variant="ghost"
-                    className={`w-full justify-start h-12 px-4 ${
-                        item.active
-                            ? "bg-violet-500/20 text-violet-700 font-semibold border border-violet-200/50"
-                            : "text-gray-700 hover:bg-white/50 hover:text-violet-600"
-                    } transition-all duration-200`}
-                    onClick={() => {
-                      if (item.submenu) {
-                        toggleMenu(item.id)
-                      } else {
-                        navigateTo(item.href)
-                      }
-                    }}
-                >
-                  <item.icon className="w-5 h-5 mr-3" />
-                  <span className="flex-1 text-left">{item.label}</span>
-                  {item.submenu &&
-                      (expandedMenus.includes(item.id) ? (
-                          <ChevronDown className="w-4 h-4" />
-                      ) : (
-                          <ChevronRight className="w-4 h-4" />
-                      ))}
-                </Button>
-
-                {item.submenu && expandedMenus.includes(item.id) && (
-                    <div className="ml-4 mt-2 space-y-1 border-l-2 border-violet-200/30 pl-4">
-                      {item.submenu.map((subItem, index) => (
-                          <Button
-                              key={index}
-                              variant="ghost"
-                              className={`w-full justify-start h-10 px-3 text-sm transition-all duration-200 ${
-                                  subItem.active
-                                      ? "bg-violet-400/20 text-violet-700 font-semibold"
-                                      : "text-gray-600 hover:bg-white/30 hover:text-violet-600"
-                              }`}
-                              onClick={() => navigateTo(subItem.href)}
-                          >
-                            <subItem.icon className="w-4 h-4 mr-3" />
-                            {subItem.label}
-                          </Button>
-                      ))}
+                {item.submenu ? (
+                    <div>
+                      <Button
+                          variant="ghost"
+                          onClick={() => toggleMenu(item.id)}
+                          className="w-full justify-between p-3 h-auto text-left bg-transparent hover:bg-white/20 text-gray-700 hover:text-gray-900 font-medium"
+                      >
+                        <div className="flex items-center space-x-3">
+                          <item.icon className="w-5 h-5" />
+                          <span className="text-sm">{item.label}</span>
+                        </div>
+                        {expandedMenus.includes(item.id) ? (
+                            <ChevronDown className="w-4 h-4" />
+                        ) : (
+                            <ChevronRight className="w-4 h-4" />
+                        )}
+                      </Button>
+                      {expandedMenus.includes(item.id) && (
+                          <div className="ml-4 mt-2 space-y-1 border-l-2 border-white/20 pl-4">
+                            {item.submenu.map((subItem) => (
+                                <Button
+                                    key={subItem.href}
+                                    variant="ghost"
+                                    onClick={() => navigateTo(subItem.href)}
+                                    className={`w-full justify-start p-2 h-auto text-left text-sm font-normal ${
+                                        subItem.active
+                                            ? "bg-gradient-to-r from-violet-500/20 to-purple-500/20 text-violet-700 border border-violet-200/50"
+                                            : "bg-transparent hover:bg-white/10 text-gray-600 hover:text-gray-800"
+                                    }`}
+                                >
+                                  <div className="flex items-center space-x-2">
+                                    <subItem.icon className="w-4 h-4" />
+                                    <span className="text-xs leading-relaxed">{subItem.label}</span>
+                                  </div>
+                                </Button>
+                            ))}
+                          </div>
+                      )}
                     </div>
+                ) : (
+                    <Button
+                        variant="ghost"
+                        onClick={() => navigateTo(item.href)}
+                        className={`w-full justify-start p-3 h-auto text-left ${
+                            item.active
+                                ? "bg-gradient-to-r from-violet-500/20 to-purple-500/20 text-violet-700 border border-violet-200/50"
+                                : "bg-transparent hover:bg-white/20 text-gray-700 hover:text-gray-900"
+                        }`}
+                    >
+                      <div className="flex items-center space-x-3">
+                        <item.icon className="w-5 h-5" />
+                        <span className="text-sm font-medium">{item.label}</span>
+                      </div>
+                    </Button>
                 )}
               </div>
           ))}
-        </nav>
+        </div>
       </div>
   )
 }

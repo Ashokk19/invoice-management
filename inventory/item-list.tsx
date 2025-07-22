@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Search, Plus, Edit, Trash2, Download, Upload, Package } from "lucide-react"
+import { Search, Plus, Edit, Trash2, Download, Upload, Package, FileDown, FileUp, Filter } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -87,10 +87,10 @@ export default function ItemList() {
   })
 
   const filteredItems = items.filter(
-    (item) =>
-      item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.sku.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.type.toLowerCase().includes(searchTerm.toLowerCase()),
+      (item) =>
+          item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          item.sku.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          item.type.toLowerCase().includes(searchTerm.toLowerCase()),
   )
 
   const handleAddItem = () => {
@@ -120,20 +120,20 @@ export default function ItemList() {
   const handleUpdateItem = () => {
     if (editingItem && newItem.name && newItem.sku && newItem.type && newItem.price) {
       setItems(
-        items.map((item) =>
-          item.id === editingItem.id
-            ? {
-                ...item,
-                name: newItem.name!,
-                sku: newItem.sku!,
-                description: newItem.description || "",
-                type: newItem.type!,
-                price: newItem.price!,
-                stock: newItem.stock || 0,
-                expiryDate: newItem.expiryDate || undefined,
-              }
-            : item,
-        ),
+          items.map((item) =>
+              item.id === editingItem.id
+                  ? {
+                    ...item,
+                    name: newItem.name!,
+                    sku: newItem.sku!,
+                    description: newItem.description || "",
+                    type: newItem.type!,
+                    price: newItem.price!,
+                    stock: newItem.stock || 0,
+                    expiryDate: newItem.expiryDate || undefined,
+                  }
+                  : item,
+          ),
       )
       setEditingItem(null)
       setNewItem({ name: "", sku: "", description: "", type: "", price: 0, stock: 0, expiryDate: "" })
@@ -145,236 +145,282 @@ export default function ItemList() {
     setItems(items.filter((item) => item.id !== id))
   }
 
+  // Export functionality
+  const handleExport = () => {
+    const csvContent = [
+      ["Name", "SKU", "Description", "Type", "Price", "Stock", "Expiry Date"],
+      ...items.map(item => [
+        item.name,
+        item.sku,
+        item.description,
+        item.type,
+        item.price.toString(),
+        item.stock.toString(),
+        item.expiryDate || ""
+      ])
+    ]
+        .map(row => row.map(field => `"${field}"`).join(","))
+        .join("\n")
+
+    const blob = new Blob([csvContent], { type: "text/csv" })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement("a")
+    a.href = url
+    a.download = "inventory-items.csv"
+    a.click()
+    URL.revokeObjectURL(url)
+  }
+
+  // Import functionality (placeholder)
+  const handleImport = () => {
+    // In a real application, you'd implement file upload and parsing
+    alert("Import functionality would be implemented here")
+  }
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-violet-50 via-purple-25 to-indigo-50 flex relative overflow-hidden">
-      {/* Animated background elements */}
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute -top-40 -right-40 w-96 h-96 bg-gradient-to-r from-violet-100 to-purple-100 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-pulse"></div>
-        <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-gradient-to-r from-purple-50 to-indigo-100 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-pulse delay-1000"></div>
-      </div>
-
-      {/* Enhanced grid pattern overlay */}
-      <div className="absolute inset-0 bg-[linear-gradient(rgba(0,0,0,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(0,0,0,0.02)_1px,transparent_1px)] bg-[size:40px_40px]"></div>
-
-      <AppSidebar currentPath="/inventory/items" />
-
-      {/* Main Content */}
-      <div className="flex-1 p-8 relative z-10">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Item List</h1>
-          <p className="text-gray-600 font-medium">Manage your inventory items</p>
+      <div className="min-h-screen bg-gradient-to-br from-violet-50 via-purple-25 to-indigo-50 flex relative overflow-hidden">
+        {/* Animated background elements */}
+        <div className="absolute inset-0 overflow-hidden">
+          <div className="absolute -top-40 -right-40 w-96 h-96 bg-gradient-to-r from-violet-100 to-purple-100 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-pulse"></div>
+          <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-gradient-to-r from-purple-50 to-indigo-100 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-pulse delay-1000"></div>
+          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-gradient-to-r from-indigo-50 to-violet-100 rounded-full mix-blend-multiply filter blur-3xl opacity-25 animate-pulse delay-500"></div>
         </div>
 
-        {/* Controls */}
-        <Card className="mb-6 bg-white/40 backdrop-blur-3xl border border-white/80 shadow-xl ring-1 ring-white/60">
-          <CardContent className="p-6">
-            <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
-              <div className="flex-1 relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                <Input
-                  placeholder="Search items by name, SKU, or type..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 bg-white/50 border-white/60"
-                />
+        {/* Enhanced grid pattern overlay */}
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(0,0,0,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(0,0,0,0.02)_1px,transparent_1px)] bg-[size:40px_40px]"></div>
+
+        {/* Sidebar - Increased width */}
+        <div className="w-72 bg-white/40 backdrop-blur-3xl border-r border-white/80 shadow-2xl relative z-10">
+          <AppSidebar />
+        </div>
+
+        {/* Main Content */}
+        <div className="flex-1 p-8 relative z-10">
+          {/* Header */}
+          <div className="mb-8">
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="text-3xl font-bold text-gray-900">Item List</h1>
+                <p className="text-gray-600 font-medium mt-1">
+                  Manage your inventory items
+                </p>
               </div>
-              <div className="flex gap-2">
-                <Button variant="outline" className="bg-white/50 border-white/60">
-                  <Upload className="w-4 h-4 mr-2" />
-                  Import
+            </div>
+          </div>
+
+          {/* Enhanced Controls Section with proper spacing */}
+          <div className="mb-8">
+            <div className="flex flex-wrap items-center gap-4 justify-between">
+              {/* Search Bar */}
+              <div className="flex-1 min-w-[280px]">
+                <div className="relative glass-card flex items-center">
+                  <Search className="absolute left-3 text-gray-400 w-5 h-5" />
+                  <Input
+                      placeholder="Search by name, SKU, or type..."
+                      value={searchTerm}
+                      onChange={e => setSearchTerm(e.target.value)}
+                      className="w-full pl-10 pr-4 py-2 bg-transparent border-none focus:ring-0"
+                  />
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex items-center gap-3">
+                <Button
+                    variant="outline"
+                    onClick={handleImport}
+                    className="glass-card py-2 px-3 flex items-center space-x-1"
+                >
+                  <Upload className="w-4 h-4" />
+                  <span>Import</span>
                 </Button>
-                <Button variant="outline" className="bg-white/50 border-white/60">
-                  <Download className="w-4 h-4 mr-2" />
-                  Export
+                <Button
+                    variant="outline"
+                    onClick={handleExport}
+                    className="glass-card py-2 px-3 flex items-center space-x-1"
+                >
+                  <Download className="w-4 h-4" />
+                  <span>Export</span>
                 </Button>
                 <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
                   <DialogTrigger asChild>
-                    <Button className="bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700">
-                      <Plus className="w-4 h-4 mr-2" />
-                      Add Item
+                    <Button className="py-2 px-4 bg-gradient-to-r from-violet-500 to-purple-600 text-white flex items-center space-x-1">
+                      <Plus className="w-4 h-4" />
+                      <span>Add Item</span>
                     </Button>
                   </DialogTrigger>
-                  <DialogContent className="bg-white/90 backdrop-blur-3xl border border-white/80 max-w-2xl">
+                  <DialogContent className="glass-card max-w-md mx-auto mt-20 p-6 space-y-4 rounded-xl shadow-xl">
                     <DialogHeader>
                       <DialogTitle>{editingItem ? "Edit Item" : "Add New Item"}</DialogTitle>
                       <DialogDescription>
                         {editingItem ? "Update the item details below." : "Fill in the details to add a new item."}
                       </DialogDescription>
                     </DialogHeader>
-                    <div className="grid grid-cols-2 gap-4 py-4">
-                      <div className="space-y-2">
+                    <div className="grid gap-4">
+                      <div>
                         <Label htmlFor="name">Item Name *</Label>
                         <Input
-                          id="name"
-                          value={newItem.name || ""}
-                          onChange={(e) => setNewItem({ ...newItem, name: e.target.value })}
-                          className="bg-white/50"
+                            id="name"
+                            value={newItem.name || ""}
+                            onChange={(e) => setNewItem({ ...newItem, name: e.target.value })}
+                            className="w-full bg-transparent border border-white/50 px-3 py-2 rounded-md"
                         />
                       </div>
-                      <div className="space-y-2">
+                      <div>
                         <Label htmlFor="sku">SKU *</Label>
                         <Input
-                          id="sku"
-                          value={newItem.sku || ""}
-                          onChange={(e) => setNewItem({ ...newItem, sku: e.target.value })}
-                          className="bg-white/50"
+                            id="sku"
+                            value={newItem.sku || ""}
+                            onChange={(e) => setNewItem({ ...newItem, sku: e.target.value })}
+                            className="w-full bg-transparent border border-white/50 px-3 py-2 rounded-md"
                         />
                       </div>
-                      <div className="space-y-2 col-span-2">
+                      <div>
                         <Label htmlFor="description">Description</Label>
                         <Textarea
-                          id="description"
-                          value={newItem.description || ""}
-                          onChange={(e) => setNewItem({ ...newItem, description: e.target.value })}
-                          className="bg-white/50"
+                            id="description"
+                            value={newItem.description || ""}
+                            onChange={(e) => setNewItem({ ...newItem, description: e.target.value })}
+                            className="w-full bg-transparent border border-white/50 px-3 py-2 rounded-md"
                         />
                       </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="type">Type *</Label>
-                        <Select
-                          value={newItem.type || ""}
-                          onValueChange={(value) => setNewItem({ ...newItem, type: value })}
-                        >
-                          <SelectTrigger className="bg-white/50">
-                            <SelectValue placeholder="Select type" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="Electronics">Electronics</SelectItem>
-                            <SelectItem value="Clothing">Clothing</SelectItem>
-                            <SelectItem value="Food">Food</SelectItem>
-                            <SelectItem value="Home & Garden">Home & Garden</SelectItem>
-                            <SelectItem value="Books">Books</SelectItem>
-                            <SelectItem value="Sports">Sports</SelectItem>
-                          </SelectContent>
-                        </Select>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <Label htmlFor="price">Price *</Label>
+                          <Input
+                              id="price"
+                              type="number"
+                              value={newItem.price || ""}
+                              onChange={(e) => setNewItem({ ...newItem, price: parseFloat(e.target.value) })}
+                              className="w-full bg-transparent border border-white/50 px-3 py-2 rounded-md"
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="stock">Stock Quantity</Label>
+                          <Input
+                              id="stock"
+                              type="number"
+                              value={newItem.stock || ""}
+                              onChange={(e) => setNewItem({ ...newItem, stock: parseInt(e.target.value) })}
+                              className="w-full bg-transparent border border-white/50 px-3 py-2 rounded-md"
+                          />
+                        </div>
                       </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="price">Price *</Label>
+                      <div>
+                        <Label htmlFor="expiryDate">Expiry Date (Optional)</Label>
                         <Input
-                          id="price"
-                          type="number"
-                          step="0.01"
-                          value={newItem.price || ""}
-                          onChange={(e) => setNewItem({ ...newItem, price: Number.parseFloat(e.target.value) || 0 })}
-                          className="bg-white/50"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="stock">Stock Quantity</Label>
-                        <Input
-                          id="stock"
-                          type="number"
-                          value={newItem.stock || ""}
-                          onChange={(e) => setNewItem({ ...newItem, stock: Number.parseInt(e.target.value) || 0 })}
-                          className="bg-white/50"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="expiry">Expiry Date (Optional)</Label>
-                        <Input
-                          id="expiry"
-                          type="date"
-                          value={newItem.expiryDate || ""}
-                          onChange={(e) => setNewItem({ ...newItem, expiryDate: e.target.value })}
-                          className="bg-white/50"
+                            id="expiryDate"
+                            type="date"
+                            value={newItem.expiryDate || ""}
+                            onChange={(e) => setNewItem({ ...newItem, expiryDate: e.target.value })}
+                            className="w-full bg-transparent border border-white/50 px-3 py-2 rounded-md"
                         />
                       </div>
                     </div>
-                    <div className="flex justify-end gap-2">
-                      <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
+                    <div className="flex justify-end space-x-2 mt-4">
+                      <Button variant="outline" onClick={() => setIsAddDialogOpen(false)} className="px-4 py-2">
                         Cancel
                       </Button>
                       <Button
-                        onClick={editingItem ? handleUpdateItem : handleAddItem}
-                        className="bg-gradient-to-r from-violet-500 to-purple-600"
+                          onClick={editingItem ? handleUpdateItem : handleAddItem}
+                          className="px-4 py-2 bg-gradient-to-r from-violet-500 to-purple-600 text-white"
                       >
                         {editingItem ? "Update" : "Add"} Item
                       </Button>
                     </div>
                   </DialogContent>
                 </Dialog>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
 
-        {/* Items Table */}
-        <Card className="bg-white/40 backdrop-blur-3xl border border-white/80 shadow-xl ring-1 ring-white/60">
-          <CardHeader>
-            <CardTitle className="flex items-center">
-              <Package className="w-5 h-5 mr-2 text-violet-600" />
-              Items ({filteredItems.length})
-            </CardTitle>
-            <CardDescription>Manage your inventory items</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Name</TableHead>
-                    <TableHead>SKU</TableHead>
-                    <TableHead>Description</TableHead>
-                    <TableHead>Type</TableHead>
-                    <TableHead>Price</TableHead>
-                    <TableHead>Stock</TableHead>
-                    <TableHead>Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredItems.map((item) => (
-                    <TableRow key={item.id} className="hover:bg-white/20">
-                      <TableCell className="font-medium">{item.name}</TableCell>
-                      <TableCell className="font-mono text-sm">{item.sku}</TableCell>
-                      <TableCell className="max-w-xs truncate">{item.description}</TableCell>
-                      <TableCell>
-                        <span className="px-2 py-1 bg-violet-100 text-violet-700 rounded-full text-xs font-medium">
+              </div>
+
+              {/* Import/Export Buttons */}
+
+            </div>
+          </div>
+
+          {/* Items Table with proper spacing */}
+          <Card className="bg-white/40 backdrop-blur-3xl border border-white/80 shadow-xl ring-1 ring-white/60 relative overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-br from-white/30 via-transparent to-white/20"></div>
+            <CardHeader className="relative z-10">
+              <CardTitle className="text-lg font-bold text-gray-900 flex items-center">
+                <Package className="w-5 h-5 mr-2 text-violet-600" />
+                Items ({filteredItems.length})
+              </CardTitle>
+              <CardDescription className="text-gray-600 font-medium">Manage your inventory items</CardDescription>
+            </CardHeader>
+            <CardContent className="relative z-10">
+              <div className="rounded-lg border border-white/40 bg-white/20 backdrop-blur-lg overflow-hidden">
+                <Table style={{ borderCollapse: 'separate', borderSpacing: '0px 4px' }}>
+                  <TableHeader>
+                    <TableRow className="border-white/40">
+                      <TableHead className="bg-white/30 font-semibold text-gray-700">Name</TableHead>
+                      <TableHead className="bg-white/30 font-semibold text-gray-700">SKU</TableHead>
+                      <TableHead className="bg-white/30 font-semibold text-gray-700">Description</TableHead>
+                      <TableHead className="bg-white/30 font-semibold text-gray-700">Type</TableHead>
+                      <TableHead className="bg-white/30 font-semibold text-gray-700">Price</TableHead>
+                      <TableHead className="bg-white/30 font-semibold text-gray-700">Stock</TableHead>
+                      <TableHead className="bg-white/30 font-semibold text-gray-700">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredItems.map((item) => (
+                        <TableRow
+                            key={item.id}
+                            className="border-white/40 hover:bg-white/30 transition-colors duration-200 bg-white/15"
+                        >
+                          <TableCell className="font-medium text-gray-900">{item.name}</TableCell>
+                          <TableCell className="text-gray-700">{item.sku}</TableCell>
+                          <TableCell className="text-gray-700 max-w-xs truncate">{item.description}</TableCell>
+                          <TableCell>
+                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-violet-100/60 text-violet-700">
                           {item.type}
                         </span>
-                      </TableCell>
-                      <TableCell className="font-semibold">${item.price.toFixed(2)}</TableCell>
-                      <TableCell>
-                        <span
-                          className={`px-2 py-1 rounded-full text-xs font-medium ${
-                            item.stock < 10
-                              ? "bg-red-100 text-red-700"
-                              : item.stock < 25
-                                ? "bg-yellow-100 text-yellow-700"
-                                : "bg-green-100 text-green-700"
-                          }`}
-                        >
+                          </TableCell>
+                          <TableCell>
+                        <span className="font-semibold text-gray-900">
+                          ${item.price.toFixed(2)}
+                        </span>
+                          </TableCell>
+                          <TableCell>
+                        <span className={`font-semibold ${item.stock < 10 ? 'text-red-600' : 'text-gray-900'}`}>
                           {item.stock}
                         </span>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex gap-2">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleEditItem(item)}
-                            className="hover:bg-violet-100"
-                          >
-                            <Edit className="w-4 h-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleDeleteItem(item.id)}
-                            className="hover:bg-red-100 text-red-600"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          </CardContent>
-        </Card>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center space-x-2">
+                              <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => handleEditItem(item)}
+                                  className="bg-white/50 hover:bg-white/70 border-white/60"
+                              >
+                                <Edit className="w-4 h-4" />
+                              </Button>
+                              <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => handleDeleteItem(item.id)}
+                                  className="bg-red-50/50 hover:bg-red-100/70 text-red-600 border-red-200"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                    ))}
+                    {filteredItems.length === 0 && (
+                        <TableRow>
+                          <TableCell colSpan={7} className="text-center py-8 text-gray-500">
+                            No items found matching your search criteria
+                          </TableCell>
+                        </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </div>
-    </div>
   )
 }

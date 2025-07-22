@@ -10,6 +10,10 @@ body {
   .text-balance {
     text-wrap: balance;
   }
+  /* Custom sidebar width utilities */
+  .w-72 {
+    width: 18rem; /* 288px */
+  }
 }
 
 @layer base {
@@ -90,5 +94,21 @@ body {
   }
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+/*@layer components {
+  .glass-card {
+    @apply bg-white/30 backdrop-blur-lg border border-white/50 rounded-lg shadow-md;
+  }
+} */
+/* Enhanced glassmorphism effects */
+@layer components {
+  .glass-card {
+    @apply bg-white/40 backdrop-blur-3xl border border-white/80 shadow-xl ring-1 ring-white/60;
+  }
+
+  .glass-sidebar {
+    @apply bg-white/40 backdrop-blur-3xl border-r border-white/80 shadow-2xl;
   }
 }
