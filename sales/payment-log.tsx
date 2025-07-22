@@ -132,7 +132,9 @@ export default function PaymentLog() {
 
   return (
     <div className="flex min-h-screen bg-gradient-to-br from-violet-50 via-purple-50 to-indigo-100">
-      <AppSidebar currentPath="/sales/payments" />
+      <div className="w-72 bg-white/30 backdrop-blur-lg border-r border-white/50 shadow-2xl z-10">
+        <AppSidebar currentPath="/sales/payments" />
+      </div>
       <div className="flex-1 p-6 space-y-6">
         {/* Header */}
         <div className="flex justify-between items-center">

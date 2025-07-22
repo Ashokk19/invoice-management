@@ -163,7 +163,10 @@ export default function VendorList() {
 
   return (
     <div className="flex min-h-screen bg-gradient-to-br from-violet-50 via-white to-purple-50">
-      <AppSidebar currentPath="/purchase/vendors" />
+
+      <div className="w-72 bg-white/30 backdrop-blur-lg border-r border-white/50 shadow-2xl z-10">
+        <AppSidebar currentPath="/purchase/vendors"/>
+      </div>
 
       <div className="flex-1 p-8">
         <div className="mb-8">
