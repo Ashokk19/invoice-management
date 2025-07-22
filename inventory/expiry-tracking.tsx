@@ -51,9 +51,9 @@ export default function ExpiryTracking() {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "expired":        return <Badge variant="destructive">Expired</Badge>
-      case "expiring-soon":  return <Badge className="bg-orange-600 text-black">Expiring Soon</Badge>
-      case "warning":        return <Badge className="bg-yellow-600 text-black">Warning</Badge>
-      case "good":           return <Badge className="bg-green-600 text-black">Good</Badge>
+      case "expiring-soon":  return <Badge className="bg-orange-600 text-white">Expiring Soon</Badge>
+      case "warning":        return <Badge className="bg-yellow-600 text-white">Warning</Badge>
+      case "good":           return <Badge className="bg-green-600 text-white">Good</Badge>
       default:               return <Badge variant="secondary">Unknown</Badge>
     }
   }
@@ -68,10 +68,10 @@ export default function ExpiryTracking() {
         {/* Main */}
         <div className="flex-1 p-8 relative z-10">
           <h1 className="text-3xl font-bold mb-2 text-gray-900">Proactive Expiry Tracking</h1>
-          <p className="text-gray-600 mb-6">Monitor product expiry dates and prevent waste</p>
+          <p className="text-gray-600 mb-4">Monitor product expiry dates and prevent waste</p>
 
           {/* Status Cards */}
-          <div className="grid grid-cols-3 sm:grid-cols-3 lg:grid-cols-6 gap-6 mb-6">
+          <div className="grid grid-cols-3 sm:grid-cols-3 lg:grid-cols-6 gap-6 mb-4">
             {[
               { title: "Expired Items", count: statusCounts.expired,      icon: AlertTriangle, color: "red",    desc: "Immediate attention required" },
               { title: "Expiring Soon", count: statusCounts.expiringSoon, icon: Clock,         color: "orange", desc: "Within 7 days" },
@@ -83,7 +83,7 @@ export default function ExpiryTracking() {
                     className={`
         h-48 flex flex-col justify-between px-6 py-4 overflow-hidden
         rounded-2xl shadow-lg relative
-        bg-${color}-500
+        bg-${color}-500/20
         border-0
         `}
                     style={{
@@ -106,7 +106,7 @@ export default function ExpiryTracking() {
 
 
           {/* Search + Filter */}
-          <Card className="mb-6 bg-white/40 backdrop-blur-3xl border border-white/80 shadow-xl ring-1 ring-white/60 rounded-lg">
+          <Card className="mb-4 bg-white/40 backdrop-blur-3xl border border-white/80 shadow-xl ring-1 ring-white/60 rounded-lg">
             <CardContent className="p-4">
               <div className="flex flex-wrap items-center gap-4">
                 <div className="flex-1 relative">
@@ -182,7 +182,7 @@ export default function ExpiryTracking() {
                               : `${item.daysUntilExpiry} days`}
                         </span>
                           </TableCell>
-                          <TableCell><Badge className="bg-gray-100 text-gray-700">{item.stock}</Badge></TableCell>
+                          <TableCell><Badge className="bg-gray-300 text-gray-700">{item.stock}</Badge></TableCell>
                           <TableCell>{getStatusBadge(item.status)}</TableCell>
                         </TableRow>
                     ))}

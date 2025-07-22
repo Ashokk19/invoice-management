@@ -10,8 +10,55 @@ const config: Config = {
     "./app/**/*.{js,ts,jsx,tsx,mdx}",
     "*.{js,ts,jsx,tsx,mdx}"
   ],
+	safelist: [
+		//Gradient shades
+		'bg-gradient-to-br',
+		'from-green-500/10',
+		'from-blue-500/10',
+		'from-red-500/10',
+		'from-violet-500/10',
+		'from-orange-500/10',
+		'to-green-600/20',
+		'to-blue-600/20',
+		'to-red-600/20',
+		'to-violet-600/20',
+		'to-orange-600/20',
+		'to-green-800/20',
+		'to-blue-800/20',
+		'to-red-800/20',
+		'to-violet-800/20',
+		'to-orange-800/20',
+		// Background colors with opacity
+		'bg-red-500/20',
+		'bg-orange-500/20',
+		'bg-violet-500/20',
+		'bg-green-500/20',
+		'bg-yellow-500/20',
+		// Solid background colors
+		'bg-gray-300',
+		'bg-red-500',
+		'bg-orange-500',
+		'bg-violet-500',
+		'bg-green-500',
+		'bg-yellow-500',
+		'bg-red-600',
+		'bg-orange-600',
+		'bg-violet-600',
+		'bg-green-600',
+		'bg-yellow-600',
+		'bg-blue-500',
+		// Text colors
+		'text-red-600',
+		'text-orange-600',
+		'text-violet-600',
+		'text-green-600',
+		'text-yellow-600',
+  ],
   theme: {
   	extend: {
+		maxWidth: {
+			'lg-xl': '4rem',
+		},
   		colors: {
   			background: 'hsl(var(--background))',
   			foreground: 'hsl(var(--foreground))',

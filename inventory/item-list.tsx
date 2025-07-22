@@ -18,6 +18,7 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 import AppSidebar from "../components/app-sidebar"
+import './inventory-log.css'
 
 interface Item {
   id: string
@@ -209,29 +210,28 @@ export default function ItemList() {
           </div>
 
           {/* Enhanced Controls Section with proper spacing */}
-          <div className="mb-8">
-            <div className="flex flex-wrap items-center gap-4 justify-between">
-              {/* Search Bar */}
-              <div className="flex-1 min-w-[280px]">
-                <div className="relative glass-card flex items-center">
-                  <Search className="absolute left-3 text-gray-400 w-5 h-5" />
-                  <Input
-                      placeholder="Search by name, SKU, or type..."
-                      value={searchTerm}
-                      onChange={e => setSearchTerm(e.target.value)}
-                      className="w-full pl-10 pr-4 py-2 bg-transparent border-none focus:ring-0"
-                  />
+          <Card className="mb-4 bg-white/40 backdrop-blur-3xl border border-white/80 shadow-xl ring-1 ring-white/60">
+            <CardContent className="p-6">
+              <div className="controls-inner">
+                {/* Search */}
+                <div className="controls-search-wrapper relative">
+                  <div className="relative bg-white/30 backdrop-blur-lg border border-white/50 rounded-lg overflow-hidden shadow-sm">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                    <Input
+                        placeholder="Search by name, SKU or type..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="w-full pl-10 pr-4 py-2 bg-transparent border-none focus:ring-0"
+                    />
+                  </div>
                 </div>
-              </div>
-
               {/* Action Buttons */}
               <div className="flex items-center gap-3">
                 <Button
                     variant="outline"
                     onClick={handleImport}
-                    className="glass-card py-2 px-3 flex items-center space-x-1"
-                >
-                  <Upload className="w-4 h-4" />
+                    className="whitespace-nowrap">
+                  <Upload className="w-4 h-4 mr-1" />
                   <span>Import</span>
                 </Button>
                 <Button
@@ -245,7 +245,7 @@ export default function ItemList() {
                 <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
                   <DialogTrigger asChild>
                     <Button className="py-2 px-4 bg-gradient-to-r from-violet-500 to-purple-600 text-white flex items-center space-x-1">
-                      <Plus className="w-4 h-4" />
+                      <Plus className="w-4 h-4 mr-1" />
                       <span>Add Item</span>
                     </Button>
                   </DialogTrigger>
@@ -336,7 +336,8 @@ export default function ItemList() {
               {/* Import/Export Buttons */}
 
             </div>
-          </div>
+            </CardContent>
+          </Card>
 
           {/* Items Table with proper spacing */}
           <Card className="bg-white/40 backdrop-blur-3xl border border-white/80 shadow-xl ring-1 ring-white/60 relative overflow-hidden">

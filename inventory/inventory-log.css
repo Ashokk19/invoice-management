@@ -1,0 +1,19 @@
+/* 1. Increase the search input container’s width */
+/* Adjust the wrapper around the Input to specify a larger max-width */
+.controls-search-wrapper {
+    flex: 1 1 auto;          /* allow grow/shrink */
+    max-width: 80%;          /* cap width as needed */
+}
+
+
+/* 2. Ensure the filters stay aligned vertically center with the search */
+/* Make the overall flex container align items center */
+.controls-inner {
+    display: flex;
+    flex-wrap: nowrap;       /* prevent wrapping */
+    align-items: center;     /* vertically center items */
+    gap: 0.75rem;            /* spacing between items */
+}
+
+
+/* 3. Example of updated JSX with the new classes applied */

@@ -30,6 +30,7 @@ import {
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import AppSidebar from "@/components/app-sidebar"
+import './inventory-log.css'
 
 import {
   DndContext,
@@ -340,22 +341,26 @@ export default function ItemCategories() {
         {/* Main Content */}
         <div className="flex-1 p-8 relative z-10">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Item Categories</h1>
-          <p className="text-gray-600 mb-6">
+          <p className="text-gray-600 mb-4">
             Organize your inventory by categories
           </p>
 
           {/* Controls */}
-          <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
-            <div className="flex-1 min-w-[280px] bg-white/30 backdrop-blur-lg border border-white/50 rounded-lg shadow-md flex items-center px-3 py-2">
-              <Search className="w-5 h-5 text-gray-400 mr-2" />
-              <Input
-                  placeholder="Search by category or item..."
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  className="bg-transparent border-none focus:ring-0 flex-1"
-              />
+          <Card className="mb-4 bg-white/40 backdrop-blur-3xl border border-white/80 shadow-xl ring-1 ring-white/60">
+          <CardContent className="p-6">
+          <div className="mb-6 controls-inner">
+            {/* Search Input */}
+            <div className="controls-search-wrapper relative">
+              <div className="relative bg-white/30 backdrop-blur-lg border border-white/50 rounded-lg overflow-hidden shadow-sm">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                <Input
+                    placeholder="Search categories or items..."
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    className="w-full pl-10 pr-4 py-2 bg-transparent border-none"
+                />
+              </div>
             </div>
-            <div className="flex items-center gap-3">
               <Button
                   variant="outline"
                   className="bg-white/30 backdrop-blur-lg border border-white/50 rounded-lg shadow-md px-3 py-2 flex items-center"
@@ -430,8 +435,8 @@ export default function ItemCategories() {
                   </div>
                 </DialogContent>
               </Dialog>
-            </div>
-          </div>
+          </div></CardContent>
+          </Card>
 
           {/* Tiles Grid: always multiple per row */}
           <DndContext
